@@ -1,13 +1,5 @@
 package com.spring.controller;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.spring.model.Role;
-import com.spring.model.User;
-import com.spring.security.service.UserDetailsImpl;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +20,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.spring.exception.TokenRefreshException;
+import com.spring.model.ERole;
+import com.spring.model.RefreshToken;
+import com.spring.model.Role;
+import com.spring.model.User;
+import com.spring.payload.request.LogOutRequest;
+import com.spring.payload.request.LoginRequest;
+import com.spring.payload.request.SignupRequest;
+import com.spring.payload.request.TokenRefreshRequest;
+import com.spring.payload.response.JwtResponse;
+import com.spring.payload.response.MessageResponse;
+import com.spring.payload.response.TokenRefreshResponse;
+import com.spring.repository.RoleRepository;
+import com.spring.repository.UserRepository;
+import com.spring.security.jwt.	GenerateJwtTokenProvider;
+import com.spring.security.service.UserDetailsImpl;
+import com.spring.service.RefreshTokenService;
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
@@ -46,7 +56,7 @@ public class AuthController {
 	PasswordEncoder encoder;
 
 	@Autowired
-	JwtUtils jwtUtils;
+	GenerateJwtTokenProvider generateJwtTokenProvider;
 
 	@Autowired
 	RefreshTokenService refreshTokenService;
@@ -54,17 +64,17 @@ public class AuthController {
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+		Authentication authentication = authenticationManager
+		        .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
 		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-		String jwt = jwtUtils.generateJwtToken(userDetails);
+		String jwt = generateJwtTokenProvider.generateJwtToken(userDetails);
 
-		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
-				.collect(Collectors.toList());
+		 List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
+			        .collect(Collectors.toList());
 
 		RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
@@ -128,7 +138,7 @@ public class AuthController {
 
 		return refreshTokenService.findByToken(requestRefreshToken).map(refreshTokenService::verifyExpiration)
 				.map(RefreshToken::getUser).map(user -> {
-					String token = jwtUtils.generateTokenFromUsername(user.getUsername());
+					String token = generateJwtTokenProvider.generateTokenFromUsername(user.getUsername());
 					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
 				})
 				.orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));

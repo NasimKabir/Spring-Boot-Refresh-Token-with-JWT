@@ -17,7 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.spring.security.jwt.JwtTokenFilter;
 import com.spring.security.jwt.MyAuthenticationEntiyPoint;
 import com.spring.security.service.CustomUserDetailsService;
-import com.spring.security.service.UserDetailsImpl;
 
 @Configuration
 @EnableWebSecurity

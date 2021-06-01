@@ -5,7 +5,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
 
 import com.spring.security.service.UserDetailsImpl;
 
@@ -14,7 +14,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
-
+@Component
 public class GenerateJwtTokenProvider {
 	 private static final Logger logger = LoggerFactory.getLogger(GenerateJwtTokenProvider.class);
 	 
@@ -25,16 +25,20 @@ public class GenerateJwtTokenProvider {
 	  @Value("${jwtExpirationMs}")
 	  private long jwtExpirationMs;
 	  
-	  public String GenerateToken(Authentication authentication) {
-			UserDetailsImpl detailsImpl=(UserDetailsImpl) authentication.getPrincipal();
-			return Jwts.builder()
-					.setSubject(detailsImpl.getUsername())
-					.setIssuedAt(new Date())
-					.setExpiration(JwtUtils.getExpirationTimeHourly(jwtExpirationMs))
-					.signWith(SignatureAlgorithm.HS512, jwtSecret)
-					.compact();
-			
-		}
+	  public String generateJwtToken(UserDetailsImpl userPrincipal) {
+		    return generateTokenFromUsername(userPrincipal.getUsername());
+		  }
+	  
+
+		  public String generateTokenFromUsername(String username) {
+			  return Jwts.builder()
+						.setSubject(username)
+						.setIssuedAt(new Date())
+						.setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+						.signWith(SignatureAlgorithm.HS512, jwtSecret)
+						.compact();
+		  }
+	   
 
 		public String getUsernameFormJwtToken(String token) {
 			return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
