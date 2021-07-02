@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -135,11 +136,25 @@ public class AuthController {
 	@PostMapping("/refreshtoken")
 	public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshRequest request) {
 		String requestRefreshToken = request.getRefreshToken();
+		Object auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		String username = "";
+		String roles="";
+		if (auth instanceof UserDetails) {
+			 username = ((UserDetails)auth).getUsername();
+			 roles = ((UserDetails)auth).getAuthorities().toString();
 
+			System.out.println("username "+username);
+			System.out.println("roles "+roles);
+
+		} else {
+			System.out.println("username not found");
+		}
+		String finalUsername = username;
+		String finalRoles = roles;
 		return refreshTokenService.findByToken(requestRefreshToken).map(refreshTokenService::verifyExpiration)
 				.map(RefreshToken::getUser).map(user -> {
 					String token = generateJwtTokenProvider.generateTokenFromUsername(user.getUsername());
-					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken,finalUsername, finalRoles	));
 				})
 				.orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));
 	}
