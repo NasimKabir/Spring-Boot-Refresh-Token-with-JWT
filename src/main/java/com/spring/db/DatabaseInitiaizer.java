@@ -18,11 +18,11 @@ public class DatabaseInitiaizer {
 	@Autowired
 	private RoleRepository roleRepository;
 
-/*	@PostConstruct
+	@PostConstruct
 	public void init() {
 		roleRepository.save(new Role(ERole.ROLE_ADMIN));
 		roleRepository.save(new Role(ERole.ROLE_MODERATOR));
 		roleRepository.save(new Role(ERole.ROLE_USER));
 	}
-	*/
+	
 }
