@@ -1,5 +1,6 @@
 package com.spring.controller;
 
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -136,25 +137,21 @@ public class AuthController {
 	@PostMapping("/refreshtoken")
 	public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshRequest request) {
 		String requestRefreshToken = request.getRefreshToken();
-		Object auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		String username = "";
-		String roles="";
-		if (auth instanceof UserDetails) {
-			 username = ((UserDetails)auth).getUsername();
-			 roles = ((UserDetails)auth).getAuthorities().toString();
 
-			System.out.println("username "+username);
-			System.out.println("roles "+roles);
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		/*UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-		} else {
-			System.out.println("username not found");
-		}
-		String finalUsername = username;
-		String finalRoles = roles;
+		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
+				.collect(Collectors.toList());*/
+
+
+		System.out.println("username "+authentication.getPrincipal());
+			System.out.println("roles "+authentication.getAuthorities());
+
 		return refreshTokenService.findByToken(requestRefreshToken).map(refreshTokenService::verifyExpiration)
 				.map(RefreshToken::getUser).map(user -> {
 					String token = generateJwtTokenProvider.generateTokenFromUsername(user.getUsername());
-					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken,finalUsername, finalRoles	));
+					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
 				})
 				.orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));
 	}
