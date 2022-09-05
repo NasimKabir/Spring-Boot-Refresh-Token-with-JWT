@@ -15,8 +15,7 @@ import com.spring.model.ERole;
 import com.spring.model.Role;
 import com.spring.repository.RoleRepository;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.*;
 
 @Component
 public class DatabaseInitiaizer {
@@ -27,10 +26,18 @@ public class DatabaseInitiaizer {
 
 	@PostConstruct
 	public void init() {
-		roleRepository.save(new Role(ERole.ROLE_ADMIN));
-		roleRepository.save(new Role(ERole.ROLE_MODERATOR));
-		roleRepository.save(new Role(ERole.ROLE_USER));
-		userRepository.save(new User(1, "nasim", "nasim@gmail.com", "$2a$10$1t3pSZ8CZkJSI5Tn8COaQezfNPcwO72M3LWYTU/EwBT4zyZpIFLnG"));
+		Set<Role> roles = new HashSet<>();
+		roles.add(new Role(ERole.ROLE_USER));
+
+		roleRepository.saveAll(roles);
+
+		User user=new User();
+		user.setUsername("nasim");
+		user.setPassword("$2a$10$1t3pSZ8CZkJSI5Tn8COaQezfNPcwO72M3LWYTU/EwBT4zyZpIFLnG");
+		user.setEmail("nasim@gmail.com");
+		user.setRoles( roles);
+		userRepository.save(user);
+
 	}
 	
 }
