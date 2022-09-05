@@ -138,20 +138,13 @@ public class AuthController {
 	public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshRequest request) {
 		String requestRefreshToken = request.getRefreshToken();
 
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		/*UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
-		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
-				.collect(Collectors.toList());*/
-
-
-		System.out.println("username "+authentication.getPrincipal());
-			System.out.println("roles "+authentication.getAuthorities());
+		String username="nasim";
+		String roles="ROLE_USER";
 
 		return refreshTokenService.findByToken(requestRefreshToken).map(refreshTokenService::verifyExpiration)
 				.map(RefreshToken::getUser).map(user -> {
 					String token = generateJwtTokenProvider.generateTokenFromUsername(user.getUsername());
-					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken,username,roles));
 				})
 				.orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));
 	}
